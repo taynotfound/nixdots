@@ -1,6 +1,7 @@
 # Generated per-machine files
 /hosts/hardware-configuration.nix
 /hosts/local.nix
+/flake.lock
 
 # Desktop state
 /home-manager.backup
