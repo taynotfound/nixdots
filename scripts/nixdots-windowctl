@@ -1,0 +1,58 @@
+set -euo pipefail
+
+shelf_name() {
+  case "$1" in
+    minimized|hidden) printf '%s' "$1" ;;
+    *) echo "Unknown shelf: $1" >&2; exit 2 ;;
+  esac
+}
+
+move_active_to() {
+  hyprctl dispatch movetoworkspacesilent "special:$1" >/dev/null
+}
+
+restore_from() {
+  local shelf="$1" clients choice address workspace_id
+  clients="$(hyprctl clients -j)"
+
+  if ! jq -e --arg ws "special:${shelf}" 'any(.[]; .workspace.name == $ws)' <<<"$clients" >/dev/null; then
+    notify-send "NixDots" "No ${shelf} windows."
+    return 0
+  fi
+
+  choice="$({
+    jq -r --arg ws "special:${shelf}" '
+      .[] | select(.workspace.name == $ws)
+      | [.address, (.class // "app"), ((.title // "") | gsub("\\n"; " "))]
+      | @tsv
+    ' <<<"$clients"
+  } | awk -F '\t' '{ printf "%s\t%s — %s\n", $1, $2, $3 }' \
+    | rofi -dmenu -i -p "Restore ${shelf}" -display-columns 2)" || true
+
+  [[ -n "$choice" ]] || return 0
+  address="${choice%%$'\t'*}"
+  workspace_id="$(hyprctl activeworkspace -j | jq -r '.id')"
+  hyprctl dispatch movetoworkspace "${workspace_id},address:${address}" >/dev/null
+}
+
+status_for() {
+  local shelf="$1" count icon tooltip
+  count="$(hyprctl clients -j | jq --arg ws "special:${shelf}" '[.[] | select(.workspace.name == $ws)] | length')"
+  [[ "$count" -gt 0 ]] || { jq -nc '{text:"", class:"empty", tooltip:""}'; return; }
+  if [[ "$shelf" == minimized ]]; then
+    icon=""; tooltip="Minimized windows"
+  else
+    icon=""; tooltip="Hidden windows"
+  fi
+  jq -nc --arg text "$icon $count" --arg tooltip "$tooltip: $count" \
+    '{text:$text, class:"active", tooltip:$tooltip}'
+}
+
+case "${1:-}" in
+  close) hyprctl dispatch killactive >/dev/null ;;
+  maximize) hyprctl dispatch fullscreen 1 >/dev/null ;;
+  minimize|hide) move_active_to "$1" ;;
+  restore) restore_from "$(shelf_name "${2:-minimized}")" ;;
+  status) status_for "$(shelf_name "${2:-minimized}")" ;;
+  *) echo "Usage: nixdots-windowctl {close|maximize|minimize|hide|restore|status} [minimized|hidden]" >&2; exit 2 ;;
+esac

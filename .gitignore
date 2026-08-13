@@ -1,3 +1,11 @@
+# Generated per-machine files
+/hosts/hardware-configuration.nix
+/hosts/local.nix
+
+# Desktop state
+/home-manager.backup
+
+# Existing user state
 gnome-initial-setup-done
 pavucontrol.ini
 QtProject.conf

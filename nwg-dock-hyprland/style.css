@@ -1,0 +1,28 @@
+window {
+  background: rgba(20, 15, 30, 0.90);
+  border: 1px solid rgba(191, 140, 255, 0.22);
+  border-radius: 18px;
+}
+
+button {
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  margin: 4px;
+  padding: 6px;
+}
+
+button:hover {
+  background: rgba(191, 140, 255, 0.17);
+}
+
+button:checked,
+button.focused {
+  background: rgba(127, 90, 240, 0.34);
+}
+
+tooltip {
+  background: #191421;
+  color: #eeeaf7;
+  border-radius: 9px;
+}

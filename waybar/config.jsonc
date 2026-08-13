@@ -1,162 +1,173 @@
-// =============================================================================
-//
-// Waybar configuration
-//
-// Configuration reference: https://github.com/Alexays/Waybar/wiki/Configuration
-//
-// =============================================================================
 {
-    // -------------------------------------------------------------------------
-    // Global configuration
-    // -------------------------------------------------------------------------
-    "layer": "top",
-    "position": "top",
-    // If height property would be not present, it'd be calculated dynamically
-    "height": 30,
-    "modules-left": [
-       "custom/apps",
-       "custom/spacer",
-       "custom/weather",
-       "custom/spacer",
-       "hyprland/window"
-    ],
-    "modules-center": [
-      "hyprland/workspaces",
-    ],
-    "modules-right": [
-        "custom/media",
-        "custom/blank",
-        "custom/nvidia",
-        "cpu",
-        "tray",
-        "custom/spacer",
-        "clock#date",
-        "clock#time",
-        "custom/notifications",
-        "custom/power"
-    ],
-    // -------------------------------------------------------------------------
-    // Modules
-    // -------------------------------------------------------------------------
-     "custom/apps": { 
-       "format": " ❄️",
-       "on-click": "rofi -show drun"     },
-    "custom/weather": {
-        "format": "{}",
-	"exec": "curl 'wttr.in/Goettingen?format=1' --max-time 1",
-	"interval": 1800,
-	"on-click": "firefox 'https://www.meteoblue.com/en/weather/week/ljubljana_slovenia_3196359'"
-    },
-    "custom/media": {
-    "format": "<b>   {icon}{} </b>",
-    "return-type": "json",
-    "format-icons": {
-        "Playing": " ",
-        "Paused": " ",
-    },
-    "max-length":70,
-    "exec": "playerctl -a metadata --format '{\"text\": \"{{markup_escape(title)}}\", \"tooltip\": \"{{playerName}} : {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F",
-    "on-click": "playerctl play-pause",
-},
-"custom/nvidia": {
-    "exec": "nvidia-smi --query-gpu=utilization.gpu,temperature.gpu --format=csv,nounits,noheader | sed 's/\\([0-9]\\+\\), \\([0-9]\\+\\)/\\1% 🌡️\\2°C/g'",
-    "format": " 🎥 {} ",
-    "interval": 2
-},
+  "layer": "top",
+  "position": "top",
+  "height": 38,
+  "spacing": 4,
+  "margin-top": 7,
+  "margin-left": 10,
+  "margin-right": 10,
 
-    "clock#date": {
-        "interval": 10,
-        "format": "  {:%F}", // Icon: calendar-alt
-        "tooltip": false
-    },
-    "cpu": {
-        "interval": 5,
-        "format": "  {usage}%", // Icon: microchip
-        "states": {
-            "warning": 70,
-            "critical": 90
-        }
-    },
-    "memory": {
-        "interval": 5,
-        "format": "  {}%", // Icon: memory
-        "states": {
-            "warning": 70,
-            "critical": 90
-        }
-    },
-    "disk": {
-        "interval": 30,
-        "format": " {percentage_used}%", // Icon: database
-        "path": "/"
-    },
-    "network": {
-        "interval": 5,
-        "format-ethernet": ": {bandwidthDownOctets} : {bandwidthUpOctets}", // Icon: ethernet
-        "format-disconnected": "⚠  Disconnected",
-        "tooltip-format": "{ifname}: {ipaddr}"
-    },
-  
-    "custom/power": {
-        "format": "  ",
-        "on-click": "wlogout"
-    },
-    "tray": {
-        "icon-size": 21,
-        "spacing": 10
-    },
-    "custom/blank": {
-      "format": "   "
-    },
-    "custom/spacer": {
-      "format": " ┃ "
-    },
-    "custom/notifications":{
-    "tooltip": false,
-    "format": " {icon} {} ",
-    "format-icons": {
-        "notification": "<span foreground='#cc241d'><sup></sup></span>",
-        "none": "",
-        "dnd-notification": "<span foreground='#cc241d'><sup></sup></span>",
-        "dnd-none": "",
-        "inhibited-notification": "<span foreground='#cc241d'><sup></sup></span>",
-        "inhibited-none": "",
-        "dnd-inhibited-notification": "<span foreground='#cc241d'><sup></sup></span>",
-        "dnd-inhibited-none": ""
-      },
-    "return-type": "json",
-    "exec-if": "which swaync-client",
-    "exec": "sleep 0.1; swaync-client -swb",
-    "on-click": "sleep 0.1; swaync-client -t -sw",
-    "on-click-right": "sleep 0.1; swaync-client -d -sw",
-    "escape": true
-},
-"hyprland/workspaces": {
-    "disable-scroll": false,
-    "active-only": false,
-    "sort-by-number": true,
-    "all-outputs": true,
-    "on-click": "activate",
-    "on-scroll-up": "hyprctl dispatch workspace e+1",
-    "on-scroll-down": "hyprctl dispatch workspace e-1",
+  "modules-left": [
+    "custom/launcher",
+    "hyprland/workspaces",
+    "hyprland/window"
+  ],
+  "modules-center": [
+    "clock"
+  ],
+  "modules-right": [
+    "custom/minimized",
+    "custom/hidden",
+    "custom/media",
+    "custom/gpu",
+    "cpu",
+    "memory",
+    "pulseaudio",
+    "network",
+    "bluetooth",
+    "tray",
+    "custom/notifications",
+    "custom/power"
+  ],
+
+  "custom/launcher": {
+    "format": "",
+    "tooltip": "Applications",
+    "on-click": "rofi -show drun"
+  },
+
+  "hyprland/workspaces": {
     "format": "{icon}",
     "format-icons": {
-        "1": "I",
-		"2": "II",
-		"3": "III",
-		"4": "IV",
-		"5": "V",
-                "6": "VI",
-		"7": "VII",
-		"8": "VIII",
-		"9": "IX",
-		"10": "X",
-        "urgent": "󱎘",
-	"active": "󰨕󰨕󰨕",
-        "default": "󰎔",
-        },
-      },
-"hyprland/window": {
-    "separate-outputs": true
-},
+      "1": "󰲠",
+      "2": "󰲢",
+      "3": "󰲤",
+      "4": "󰲦",
+      "5": "󰲨",
+      "6": "󰲪",
+      "7": "󰲬",
+      "8": "󰲮",
+      "9": "󰲰",
+      "active": "󰮯",
+      "urgent": "󰀦",
+      "default": "󰧞"
+    },
+    "persistent-workspaces": {
+      "*": 5
+    },
+    "on-click": "activate",
+    "sort-by-number": true
+  },
+
+  "hyprland/window": {
+    "format": "{class}  ·  {title}",
+    "max-length": 52,
+    "separate-outputs": true,
+    "rewrite": {
+      "(.*) — Mozilla Firefox": "$1",
+      "": "Desktop"
+    }
+  },
+
+  "clock": {
+    "format": "{:%H:%M    %a %d %b}",
+    "format-alt": "{:%A, %d %B %Y  ·  %H:%M:%S}",
+    "tooltip-format": "<tt><small>{calendar}</small></tt>",
+    "calendar": {
+      "mode": "month",
+      "weeks-pos": "right",
+      "on-scroll": 1
+    }
+  },
+
+  "custom/minimized": {
+    "return-type": "json",
+    "exec": "nixdots-windowctl status minimized",
+    "interval": 1,
+    "on-click": "nixdots-windowctl restore minimized"
+  },
+
+  "custom/hidden": {
+    "return-type": "json",
+    "exec": "nixdots-windowctl status hidden",
+    "interval": 1,
+    "on-click": "nixdots-windowctl restore hidden"
+  },
+
+  "custom/media": {
+    "return-type": "json",
+    "format": "{icon} {text}",
+    "format-icons": {
+      "Playing": "",
+      "Paused": ""
+    },
+    "max-length": 28,
+    "exec": "playerctl -a metadata --format '{\"text\":\"{{markup_escape(title)}}\",\"tooltip\":\"{{markup_escape(artist)}} — {{markup_escape(title)}}\",\"alt\":\"{{status}}\"}' -F",
+    "on-click": "playerctl play-pause",
+    "on-click-right": "playerctl next"
+  },
+
+  "custom/gpu": {
+    "exec-if": "command -v nvidia-smi >/dev/null 2>&1",
+    "exec": "nvidia-smi --query-gpu=utilization.gpu,temperature.gpu --format=csv,noheader,nounits | awk -F ', ' '{print \" \" $1 \"%  \" $2 \"°C\"}'",
+    "interval": 3,
+    "tooltip": false
+  },
+
+  "cpu": {
+    "format": " {usage}%",
+    "interval": 3,
+    "tooltip": false
+  },
+  "memory": {
+    "format": " {percentage}%",
+    "interval": 3,
+    "tooltip": false
+  },
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-muted": " muted",
+    "format-icons": {
+      "headphone": "",
+      "default": ["", "", ""]
+    },
+    "on-click": "pavucontrol",
+    "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+  },
+  "network": {
+    "format-wifi": " {signalStrength}%",
+    "format-ethernet": "",
+    "format-disconnected": "",
+    "tooltip-format": "{ifname} · {ipaddr}",
+    "on-click": "nm-connection-editor"
+  },
+  "bluetooth": {
+    "format": "",
+    "format-disabled": "",
+    "format-connected": " {num_connections}",
+    "on-click": "blueman-manager"
+  },
+  "tray": {
+    "icon-size": 18,
+    "spacing": 8
+  },
+  "custom/notifications": {
+    "return-type": "json",
+    "exec-if": "command -v swaync-client >/dev/null 2>&1",
+    "exec": "swaync-client -swb",
+    "format": "{icon}",
+    "format-icons": {
+      "notification": "",
+      "none": "",
+      "dnd-notification": "",
+      "dnd-none": ""
+    },
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw"
+  },
+  "custom/power": {
+    "format": "",
+    "tooltip": "Power menu",
+    "on-click": "wlogout"
+  }
 }

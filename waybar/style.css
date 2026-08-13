@@ -1,209 +1,142 @@
-/* =============================================================================
- *
- * Waybar configuration
- *
- * Configuration reference: https://github.com/Alexays/Waybar/wiki/Configuration
- *
- * =========================================================================== */
-
-/* -----------------------------------------------------------------------------
- * Keyframes
- * -------------------------------------------------------------------------- */
-
-@keyframes blink-warning {
-    70% {
-        color: white;
-    }
-
-    to {
-        color: white;
-        background-color: orange;
-    }
-}
-
-@keyframes blink-critical {
-    70% {
-      color: white;
-    }
-
-    to {
-        color: white;
-        background-color: red;
-    }
-}
-
-
-/* -----------------------------------------------------------------------------
- * Base styles
- * -------------------------------------------------------------------------- */
-
-/* Reset all styles */
 * {
-    border: none;
-    border-radius: 0;
-    min-height: 0;
-    margin: 0;
-    padding: 0;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  font-family: "Font Awesome 6 Free", "JetBrainsMono Nerd Font", "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
 }
 
-/* The whole bar */
-#waybar {
-    background: rgba(53, 21, 82, 0.70);
-    color: white;
-    font-family: monospace;
-    font-size: 12px;
+window#waybar {
+  background: rgba(20, 15, 30, 0.88);
+  color: #eeeaf7;
+  border: 1px solid rgba(191, 140, 255, 0.20);
+  border-radius: 15px;
 }
 
-/* Each module */
+.modules-left,
+.modules-center,
+.modules-right {
+  padding: 4px;
+}
+
+#custom-launcher,
+#workspaces,
+#window,
 #clock,
+#custom-minimized,
+#custom-hidden,
+#custom-media,
+#custom-gpu,
 #cpu,
-#custom-keyboard-layout,
 #memory,
-#mode,
+#pulseaudio,
 #network,
-#tray {
-    padding-left: 10px;
-    padding-right: 10px;
-}
-
-
-/* -----------------------------------------------------------------------------
- * Module styles
- * -------------------------------------------------------------------------- */
-
-#clock {
-    font-weight: bold;
-}
-
-#cpu {
-  /* No styles */
-}
-
-#cpu.warning {
-    color: orange;
-}
-
-#cpu.critical {
-    color: red;
-}
-
-#memory {
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-}
-
-#memory.warning {
-    color: orange;
-}
-
-#memory.critical {
-    color: red;
-    animation-name: blink-critical;
-    animation-duration: 2s;
-}
-
-#mode {
-    background: #64727D;
-    border-top: 2px solid white;
-    /* To compensate for the top border and still have vertical centering */
-    padding-bottom: 2px;
-}
-
-#network {
-    /* No styles */
-}
-
-#network.disconnected {
-    color: orange;
-}
-
-#custom-spotify {
-    color: rgb(102, 220, 105);
-}
-#custom-spacer {
-  color: #B0B0B0;
-}
-
-#window {
-  color: #A8E8FF; 
-}
-
-#hyprland-workspaces {
-  color: #87CEFA;
-}
-
-#hyprland-workspaces.active {
-  color: #6E6E9C
-}
-
-#hyprland-workspaces:hover {
-  color: #FFB6C1;
-}
-#custom-media {
-  color: #ADFF2F;
-}
-
-#custom-nvidia {
-  color: #76B900
-}
-
-#temperature {
-  color: #FFA500;
-}
-
-#temperature.critical {
-    color: red;
-}
-
-#tray {
-    color: #D3D3D3;
-}
-
-#date {
-  color: #E6E6FA;
-}
-
-#time {
-  color: #FFFFFF;
-}
-
-#custom-notifications {
-  color: #B0B0B0
-}
-
-#custom-notifications.notification {
-  color: #FF7373;
-}
-
+#bluetooth,
+#tray,
+#custom-notifications,
 #custom-power {
-  color: #32CD32;
+  padding: 0 10px;
+  margin: 2px 2px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.045);
 }
 
-#window {
-    font-weight: bold;
+#custom-launcher {
+  font-size: 18px;
+  color: #c99cff;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
-#custom-weather {
- color: #FFEA70; 
+#workspaces {
+  padding: 0 5px;
 }
 
 #workspaces button {
-    border-top: 2px solid transparent;
-    /* To compensate for the top border and still have vertical centering */
-    padding-bottom: 2px;
-    padding-left: 10px;
-    padding-right: 10px;
-    color: #888888;
+  padding: 0 7px;
+  color: #827a91;
+  border-radius: 8px;
 }
 
-#workspaces button.focused {
-    border-color: #4c7899;
-    color: white;
-    background-color: #285577;
+#workspaces button.active {
+  color: #f6efff;
+  background: rgba(127, 90, 240, 0.42);
 }
 
 #workspaces button.urgent {
-    border-color: #c9545d;
-    color: #c9545d;
+  color: #ff8291;
+}
+
+#window {
+  color: #d8d0e5;
+  min-width: 180px;
+}
+
+#clock {
+  color: #ffffff;
+  font-weight: 650;
+  background: rgba(127, 90, 240, 0.24);
+}
+
+#custom-minimized.active {
+  color: #d9c0ff;
+}
+
+#custom-hidden.active {
+  color: #aaa1ba;
+}
+
+#custom-minimized.empty,
+#custom-hidden.empty {
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  background: transparent;
+}
+
+#custom-media {
+  color: #dfd3ec;
+}
+
+#custom-gpu,
+#cpu,
+#memory {
+  color: #c7bfd4;
+}
+
+#pulseaudio {
+  color: #c4ddff;
+}
+
+#network {
+  color: #b8e4d0;
+}
+
+#bluetooth {
+  color: #b7ccff;
+}
+
+#custom-notifications {
+  color: #d4ccdf;
+  font-size: 15px;
+}
+
+#custom-power {
+  color: #ff8796;
+  font-size: 15px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+#custom-launcher:hover,
+#workspaces button:hover,
+#custom-minimized:hover,
+#custom-hidden:hover,
+#pulseaudio:hover,
+#network:hover,
+#bluetooth:hover,
+#custom-notifications:hover,
+#custom-power:hover {
+  background: rgba(191, 140, 255, 0.18);
 }
