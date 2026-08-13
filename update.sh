@@ -2,6 +2,20 @@
 set -euo pipefail
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
+if ! command -v nix >/dev/null; then
+  echo "nix is required. Run this on an installed NixOS system." >&2
+  exit 1
+fi
+if ! command -v git >/dev/null; then
+  if [[ "${NIXDOTS_BOOTSTRAPPED:-}" != 1 ]]; then
+    echo "git is missing; bootstrapping it through Nix..."
+    exec env NIXDOTS_BOOTSTRAPPED=1 nix --extra-experimental-features 'nix-command flakes' \
+      shell nixpkgs#git --command "$repo_root/update.sh" "$@"
+  fi
+  echo "git is still unavailable inside the Nix environment." >&2
+  exit 1
+fi
+
 (cd "$repo_root" && nix --extra-experimental-features 'nix-command flakes' flake update)
 (cd "$repo_root" && nix --extra-experimental-features 'nix-command flakes' flake check --no-build)
 sudo nixos-rebuild switch --flake "path:$repo_root#nixdots"

@@ -4,6 +4,19 @@ set -euo pipefail
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 features=(--extra-experimental-features 'nix-command flakes')
 
+if ! command -v nix >/dev/null; then
+  echo "nix is required. Run this on an installed NixOS system." >&2
+  exit 1
+fi
+if ! command -v git >/dev/null; then
+  if [[ "${NIXDOTS_BOOTSTRAPPED:-}" != 1 ]]; then
+    echo "git is missing; bootstrapping it through Nix..."
+    exec env NIXDOTS_BOOTSTRAPPED=1 nix "${features[@]}" shell nixpkgs#git --command "$repo_root/install.sh" "$@"
+  fi
+  echo "git is still unavailable inside the Nix environment." >&2
+  exit 1
+fi
+
 if [[ ! -e /etc/NIXOS ]]; then
   echo "This installer is for an installed NixOS system." >&2
   exit 1

@@ -44,6 +44,8 @@ The installer:
 4. Creates or refreshes `flake.lock`.
 5. Runs `nixos-rebuild switch` with the Hyprland binary cache.
 
+If `git` is not installed yet, the installer temporarily provides it through `nix shell` and continues automatically.
+
 Then log out and select **Hyprland** in SDDM, or reboot.
 
 ### Optional installer settings
