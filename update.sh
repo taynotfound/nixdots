@@ -16,6 +16,14 @@ if ! command -v git >/dev/null; then
   exit 1
 fi
 
+# Flakes only expose Git-visible files. Keep machine-local files uncommitted,
+# but add intent-to-add entries while Nix evaluates the flake.
+cleanup_git_visibility() {
+  git -C "$repo_root" reset -- hosts/hardware-configuration.nix hosts/local.nix >/dev/null 2>&1 || true
+}
+trap cleanup_git_visibility EXIT
+git -C "$repo_root" add -N -f hosts/hardware-configuration.nix hosts/local.nix
+
 (cd "$repo_root" && nix --extra-experimental-features 'nix-command flakes' flake update)
 (cd "$repo_root" && nix --extra-experimental-features 'nix-command flakes' flake check --no-build)
 sudo nixos-rebuild switch --flake "path:$repo_root#nixdots"

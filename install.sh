@@ -45,6 +45,14 @@ printf 'Preparing NixDots for %s on %s (NVIDIA: %s)\n' "$username" "$host_name" 
 cp /etc/nixos/hardware-configuration.nix "$repo_root/hosts/hardware-configuration.nix"
 printf '{\n  username = "%s";\n  hostName = "%s";\n  timeZone = "%s";\n  hasNvidia = %s;\n}\n' "$username" "$host_name" "$time_zone" "$has_nvidia" > "$repo_root/hosts/local.nix"
 
+# Flakes only expose Git-visible files. Keep machine-local files uncommitted,
+# but add intent-to-add entries while Nix evaluates the flake.
+cleanup_git_visibility() {
+  git -C "$repo_root" reset -- hosts/hardware-configuration.nix hosts/local.nix >/dev/null 2>&1 || true
+}
+trap cleanup_git_visibility EXIT
+git -C "$repo_root" add -N -f hosts/hardware-configuration.nix hosts/local.nix
+
 (cd "$repo_root" && nix "${features[@]}" flake lock && nix "${features[@]}" flake check --no-build)
 sudo nixos-rebuild switch \
   --flake "path:$repo_root#nixdots" \
