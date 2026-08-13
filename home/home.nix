@@ -2,7 +2,7 @@
 let
   windowctl = pkgs.writeShellApplication {
     name = "nixdots-windowctl";
-    runtimeInputs = with pkgs; [ jq libnotify rofi-wayland ];
+    runtimeInputs = with pkgs; [ jq libnotify rofi ];
     text = builtins.readFile ../scripts/nixdots-windowctl;
   };
 
@@ -27,7 +27,7 @@ in
 
   home.packages = with pkgs; [
     windowctl screenshot
-    firefox kitty kdePackages.dolphin kdePackages.ark rofi-wayland
+    firefox kitty kdePackages.dolphin kdePackages.ark rofi
     waybar swaynotificationcenter wlogout nwg-dock-hyprland nwg-drawer
     hyprpaper hypridle hyprlock hyprpicker grim slurp wl-clipboard cliphist
     brightnessctl playerctl pavucontrol networkmanagerapplet blueman wev
