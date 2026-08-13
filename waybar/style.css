@@ -2,7 +2,7 @@
   border: none;
   border-radius: 0;
   min-height: 0;
-  font-family: "Font Awesome 6 Free", "JetBrainsMono Nerd Font", "Inter", sans-serif;
+  font-family: "Inter", "JetBrainsMono Nerd Font", "Font Awesome 6 Free", sans-serif;
   font-size: 12px;
   font-weight: 500;
 }
@@ -62,6 +62,10 @@ window#waybar {
 #workspaces button.active {
   color: #f6efff;
   background: rgba(127, 90, 240, 0.42);
+}
+
+#workspaces button {
+  font-family: "Inter", sans-serif;
 }
 
 #workspaces button.urgent {

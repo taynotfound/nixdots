@@ -154,7 +154,3 @@ Hyprland plugins are ABI-sensitive. Keep the `hyprland` and `hyprland-plugins` i
 ```bash
 sudo nixos-rebuild switch --rollback
 ```
-
-## License
-
-Use, adapt, and redistribute these dotfiles under the MIT License.
