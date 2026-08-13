@@ -40,7 +40,7 @@ The installer:
 
 1. Verifies that the system is NixOS and that hardware configuration exists.
 2. Detects your username, hostname, timezone, and NVIDIA hardware.
-3. Writes local machine data under `hosts/`.
+3. Detects the GRUB target (`nodev` for UEFI, the root disk for BIOS) and writes local machine data under `hosts/`.
 4. Temporarily marks the generated host files Git-visible so flakes can evaluate them, without committing them.
 5. Creates or refreshes `flake.lock`.
 6. Runs `nixos-rebuild switch` with the Hyprland binary cache.

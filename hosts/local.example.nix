@@ -4,4 +4,5 @@
   hostName = "nixdots";
   timeZone = "Europe/Berlin";
   hasNvidia = true;
+  bootDevice = "nodev";
 }

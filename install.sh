@@ -36,6 +36,21 @@ host_name="${NIXDOTS_HOSTNAME:-$(hostnamectl --static 2>/dev/null || hostname)}"
 time_zone="${NIXDOTS_TIMEZONE:-$(timedatectl show -p Timezone --value 2>/dev/null || true)}"
 time_zone="${time_zone:-Europe/Berlin}"
 
+if [[ -n "${NIXDOTS_BOOT_DEVICE:-}" ]]; then
+  boot_device="$NIXDOTS_BOOT_DEVICE"
+elif [[ -d /sys/firmware/efi ]]; then
+  boot_device="nodev"
+else
+  root_source="$(findmnt -no SOURCE / 2>/dev/null || true)"
+  parent_disk="$(lsblk -ndo PKNAME "$root_source" 2>/dev/null | head -n1 || true)"
+  [[ -n "$parent_disk" ]] || {
+    echo "Could not determine the BIOS boot disk from the root filesystem." >&2
+    echo "Set NIXDOTS_BOOT_DEVICE=/dev/your-disk and rerun the installer." >&2
+    exit 1
+  }
+  boot_device="/dev/$parent_disk"
+fi
+
 has_nvidia=false
 for vendor_file in /sys/bus/pci/devices/*/vendor; do
   [[ -r "$vendor_file" ]] && [[ "$(<"$vendor_file")" == 0x10de ]] && has_nvidia=true
@@ -43,7 +58,7 @@ for vendor_file in /sys/bus/pci/devices/*/vendor; do
 
 printf 'Preparing NixDots for %s on %s (NVIDIA: %s)\n' "$username" "$host_name" "$has_nvidia"
 cp /etc/nixos/hardware-configuration.nix "$repo_root/hosts/hardware-configuration.nix"
-printf '{\n  username = "%s";\n  hostName = "%s";\n  timeZone = "%s";\n  hasNvidia = %s;\n}\n' "$username" "$host_name" "$time_zone" "$has_nvidia" > "$repo_root/hosts/local.nix"
+printf '{\n  username = "%s";\n  hostName = "%s";\n  timeZone = "%s";\n  hasNvidia = %s;\n  bootDevice = "%s";\n}\n' "$username" "$host_name" "$time_zone" "$has_nvidia" "$boot_device" > "$repo_root/hosts/local.nix"
 
 # Flakes only expose Git-visible files. Keep machine-local files uncommitted,
 # but add intent-to-add entries while Nix evaluates the flake.
