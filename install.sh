@@ -68,7 +68,18 @@ cleanup_git_visibility() {
 trap cleanup_git_visibility EXIT
 git -C "$repo_root" add -N -f hosts/hardware-configuration.nix hosts/local.nix
 
+# Refuse to evaluate the old archive/config by accident.
+if git -C "$repo_root" grep -n -E 'hyprland\.lua|configType|hl\.(bind|monitor|window_rule)' HEAD -- .; then
+  echo "Legacy Hyprland Lua configuration found in $repo_root. Pull the current NixDots main branch." >&2
+  exit 1
+fi
+
 (cd "$repo_root" && nix "${features[@]}" flake lock && nix "${features[@]}" flake check --no-build)
+sudo nixos-rebuild dry-build \
+  --flake "path:$repo_root#nixdots" \
+  --option experimental-features 'nix-command flakes' \
+  --option extra-substituters 'https://hyprland.cachix.org' \
+  --option extra-trusted-public-keys 'hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc='
 sudo nixos-rebuild switch \
   --flake "path:$repo_root#nixdots" \
   --option experimental-features 'nix-command flakes' \
