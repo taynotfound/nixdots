@@ -58,7 +58,7 @@ sudo tee /etc/nixos/nixdots.nix > /dev/null <<'NIX'
     modesetting.enable = true;
     open           = false;
     nvidiaSettings = true;
-    package        = config.boot.kernelPackages.nvidiaPackages.stable;
+    package        = lib.mkDefault config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
   services.pipewire = {
