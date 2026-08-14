@@ -55,6 +55,7 @@ cat <<'NIX'
   };
 
   # NVIDIA (RTX/GTX 20xx+ proprietary)
+  boot.kernelParams = [ "nvidia-drm.modeset=1" ];
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.graphics.enable = true;
   hardware.nvidia = {
