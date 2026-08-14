@@ -1,38 +1,40 @@
 #!/usr/bin/env bash
+# Updates NixDots itself (git, --ff-only) and its flake inputs, then builds
+# the full system before switching.
 set -euo pipefail
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+features=(--extra-experimental-features 'nix-command flakes')
 
-if ! command -v nix >/dev/null; then
-  echo "nix is required. Run this on an installed NixOS system." >&2
-  exit 1
-fi
+command -v nix >/dev/null || { echo "nix is required." >&2; exit 1; }
 if ! command -v git >/dev/null; then
   if [[ "${NIXDOTS_BOOTSTRAPPED:-}" != 1 ]]; then
-    echo "git is missing; bootstrapping it through Nix..."
-    exec env NIXDOTS_BOOTSTRAPPED=1 nix --extra-experimental-features 'nix-command flakes' \
-      shell nixpkgs#git --command "$repo_root/update.sh" "$@"
+    exec env NIXDOTS_BOOTSTRAPPED=1 nix "${features[@]}" shell nixpkgs#git --command "$repo_root/update.sh" "$@"
   fi
-  echo "git is still unavailable inside the Nix environment." >&2
+  echo "git is unavailable." >&2; exit 1
+fi
+
+# Refuse to clobber local modifications (generated host files are ignored).
+if [[ -n "$(git -C "$repo_root" status --porcelain)" ]]; then
+  echo "Repository has local changes; commit or stash them first:" >&2
+  git -C "$repo_root" status --short >&2
   exit 1
 fi
 
-# Flakes only expose Git-visible files. Keep machine-local files uncommitted,
-# but add intent-to-add entries while Nix evaluates the flake.
+git -C "$repo_root" pull --ff-only
+
+# Update flake inputs intentionally (skip with NIXDOTS_NO_INPUT_UPDATE=1).
+if [[ "${NIXDOTS_NO_INPUT_UPDATE:-}" != 1 ]]; then
+  (cd "$repo_root" && nix "${features[@]}" flake update)
+fi
+
 cleanup_git_visibility() {
   git -C "$repo_root" reset -- hosts/hardware-configuration.nix hosts/local.nix >/dev/null 2>&1 || true
 }
 trap cleanup_git_visibility EXIT
 git -C "$repo_root" add -N -f hosts/hardware-configuration.nix hosts/local.nix
 
-# Refuse to evaluate the old archive/config by accident.
-if git -C "$repo_root" grep -n -E 'hyprland\.lua|configType|hl\.(bind|monitor|window_rule)' HEAD -- home nixos hypr waybar scripts hosts flake.nix; then
-  echo "Legacy Hyprland Lua configuration found in $repo_root. Pull the current NixDots main branch." >&2
-  exit 1
-fi
-
-(cd "$repo_root" && nix --extra-experimental-features 'nix-command flakes' flake update)
-(cd "$repo_root" && nix --extra-experimental-features 'nix-command flakes' flake check --no-build)
-sudo nixos-rebuild dry-build \
-  --flake "path:$repo_root#nixdots" \
+(cd "$repo_root" && nix "${features[@]}" flake check --no-build)
+sudo nixos-rebuild build --flake "path:$repo_root#nixdots" \
   --option experimental-features 'nix-command flakes'
-sudo nixos-rebuild switch --flake "path:$repo_root#nixdots"
+sudo nixos-rebuild switch --flake "path:$repo_root#nixdots" \
+  --option experimental-features 'nix-command flakes'

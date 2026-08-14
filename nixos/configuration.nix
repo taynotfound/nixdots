@@ -7,7 +7,9 @@ in
 
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
-    trusted-users = [ "root" "@wheel" ];
+    # trusted-users would make wheel users root-equivalent for the Nix daemon.
+    # Substituters/keys are configured system-wide here instead, so no user
+    # ever needs to be a trusted user for the caches to work.
     substituters = [
       "https://cache.nixos.org"
       "https://hyprland.cachix.org"
@@ -28,7 +30,28 @@ in
   networking.networkmanager.enable = true;
   time.timeZone = local.timeZone;
 
-  boot.loader.grub.devices = [ (local.bootDevice or "nodev") ];
+  # Bootloader: install.sh detects the machine's existing setup and writes
+  # local.bootLoader ("systemd-boot" | "grub-efi" | "grub-bios") + bootDevice.
+  boot.loader = lib.mkMerge [
+    (lib.mkIf ((local.bootLoader or "grub-bios") == "systemd-boot") {
+      systemd-boot.enable = true;
+      efi.canTouchEfiVariables = true;
+    })
+    (lib.mkIf ((local.bootLoader or "grub-bios") == "grub-efi") {
+      grub = {
+        enable = true;
+        efiSupport = true;
+        device = "nodev";
+      };
+      efi.canTouchEfiVariables = true;
+    })
+    (lib.mkIf ((local.bootLoader or "grub-bios") == "grub-bios") {
+      grub = {
+        enable = true;
+        device = local.bootDevice or "nodev";
+      };
+    })
+  ];
 
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
@@ -61,20 +84,40 @@ in
     portalPackage = hyprPkgs.xdg-desktop-portal-hyprland;
   };
 
+  # XDPH does not implement FileChooser; the GTK portal provides it.
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+
+  # GUI privilege prompts (pkexec etc.) need a running polkit agent.
+  security.polkit.enable = true;
+  systemd.user.services.hyprpolkitagent = {
+    description = "Hyprland polkit authentication agent";
+    wantedBy = [ "graphical-session.target" ];
+    after = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.hyprpolkitagent}/libexec/hyprpolkitagent";
+      Restart = "on-failure";
+    };
+  };
+
   # A normal graphical login rather than dropping into a TTY.
   services.displayManager.sddm.enable = true;
   services.displayManager.sddm.wayland.enable = true;
   services.displayManager.defaultSession = "hyprland";
 
-  security.polkit.enable = true;
   security.rtkit.enable = true;
   services.gnome.gnome-keyring.enable = true;
+  security.pam.services.sddm.enableGnomeKeyring = true;
+
+  # Removable drives in Dolphin etc.
+  services.udisks2.enable = true;
 
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
+    wireplumber.enable = true;
   };
 
   hardware.bluetooth = {
@@ -88,15 +131,26 @@ in
     enable32Bit = true;
   };
 
-  # install.sh detects NVIDIA from PCI vendor IDs. RTX/Turing works reliably
-  # with the proprietary kernel module, so don't opt into the open module here.
+  # NVIDIA. install.sh detects the GPU generation and writes
+  # local.nvidiaOpen; override it in hosts/local.nix when detection is wrong
+  # (hybrid graphics, unusual cards). Upstream guidance:
+  #   Turing (RTX 20xx) and newer -> open kernel modules recommended,
+  #   50-series and newer -> open modules required,
+  #   pre-Turing -> proprietary modules.
   services.xserver.videoDrivers = lib.optionals local.hasNvidia [ "nvidia" ];
   hardware.nvidia = lib.mkIf local.hasNvidia {
     modesetting.enable = true;
     nvidiaSettings = true;
-    open = false;
+    open = local.nvidiaOpen or true;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
+
+  # Gaming (optional, on by default for a desktop machine).
+  programs.steam = lib.mkIf (local.gaming or true) {
+    enable = true;
+    gamescopeSession.enable = true;
+  };
+  programs.gamemode.enable = local.gaming or true;
 
   services.fstrim.enable = true;
   zramSwap.enable = true;
@@ -104,6 +158,7 @@ in
   environment.sessionVariables = {
     NIXOS_OZONE_WL = "1";
     MOZ_ENABLE_WAYLAND = "1";
+    QT_QPA_PLATFORM = "wayland;xcb";
   };
 
   fonts = {
@@ -126,7 +181,10 @@ in
     nano
     pciutils
     usbutils
+    kdePackages.qtwayland
   ];
 
-  system.stateVersion = "26.05";
+  # Preserved from the machine's original installation by install.sh.
+  # Do NOT treat this as a version selector.
+  system.stateVersion = local.stateVersion or "26.05";
 }

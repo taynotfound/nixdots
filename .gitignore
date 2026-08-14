@@ -1,24 +1,6 @@
-# Generated per-machine files
+# Generated per-machine files (created by install.sh, never committed)
 /hosts/hardware-configuration.nix
 /hosts/local.nix
-/flake.lock
 
-# Desktop state
-/home-manager.backup
-
-# Existing user state
-gnome-initial-setup-done
-pavucontrol.ini
-QtProject.conf
-.gsd-keyboard.settings-ported
-obs-studio
-heroic
-Bitwarden
-gnome-session
-pulse
-evolution
-nautilus
-clamtk
-connections.db
-rncbc.org
-yelp
+# Home Manager backups
+*.nixdots-backup
