@@ -25,7 +25,7 @@ trap cleanup_git_visibility EXIT
 git -C "$repo_root" add -N -f hosts/hardware-configuration.nix hosts/local.nix
 
 # Refuse to evaluate the old archive/config by accident.
-if git -C "$repo_root" grep -n -E 'hyprland\.lua|configType|hl\.(bind|monitor|window_rule)' HEAD -- .; then
+if git -C "$repo_root" grep -n -E 'hyprland\.lua|configType|hl\.(bind|monitor|window_rule)' HEAD -- home nixos hypr waybar scripts hosts flake.nix; then
   echo "Legacy Hyprland Lua configuration found in $repo_root. Pull the current NixDots main branch." >&2
   exit 1
 fi
