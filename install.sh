@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# NixDots installer — never touches /etc/nixos automatically.
-# Copies dotfiles and prints what to add to your configuration.nix.
+# NixDots installer.
+# Writes /etc/nixos/nixdots.nix and adds one imports line to configuration.nix.
+# Your existing configuration.nix is otherwise untouched.
 set -euo pipefail
 
 REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 CFG="$HOME/.config"
 BIN="$HOME/.local/bin"
 
+# ── dotfiles ──────────────────────────────────────────────────────────────────
 echo "==> Copying dotfiles..."
 mkdir -p "$CFG/hypr" "$CFG/waybar" "$BIN"
 
@@ -35,26 +37,20 @@ notify-send "Screenshot saved" "$file"
 SCRIPT
 chmod +x "$BIN/nixdots-screenshot"
 
-echo ""
-echo "==> Dotfiles copied."
-echo ""
-echo "=========================================================="
-echo " Add this to your /etc/nixos/configuration.nix, then run:"
-echo "   sudo nixos-rebuild switch"
-echo "=========================================================="
-cat <<'NIX'
-
-  # ── NixDots ────────────────────────────────────────────────────
+# ── write /etc/nixos/nixdots.nix ──────────────────────────────────────────────
+echo "==> Writing /etc/nixos/nixdots.nix..."
+sudo tee /etc/nixos/nixdots.nix > /dev/null <<'NIX'
+{ config, pkgs, lib, ... }: {
   nixpkgs.config.allowUnfree = true;
 
   programs.hyprland.enable = true;
 
   services.displayManager.sddm = {
-    enable     = true;
+    enable = true;
     wayland.enable = true;
   };
 
-  # NVIDIA (RTX/GTX 20xx+ proprietary)
+  # NVIDIA RTX/GTX — proprietary driver + Wayland requirements
   boot.kernelParams = [ "nvidia-drm.modeset=1" ];
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.graphics.enable = true;
@@ -66,10 +62,10 @@ cat <<'NIX'
   };
 
   services.pipewire = {
-    enable          = true;
-    alsa.enable     = true;
+    enable            = true;
+    alsa.enable       = true;
     alsa.support32Bit = true;
-    pulse.enable    = true;
+    pulse.enable      = true;
   };
   hardware.bluetooth.enable = true;
 
@@ -96,13 +92,24 @@ cat <<'NIX'
   ];
 
   xdg.portal = {
-    enable        = true;
-    extraPortals  = [ pkgs.xdg-desktop-portal-hyprland ];
+    enable       = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
   };
-  # ── end NixDots ────────────────────────────────────────────────
-
+}
 NIX
-echo "=========================================================="
+
+# ── inject imports line if not already present ────────────────────────────────
+if ! grep -q "nixdots.nix" /etc/nixos/configuration.nix; then
+  echo "==> Adding nixdots.nix to imports in /etc/nixos/configuration.nix..."
+  sudo sed -i 's|imports = \[|imports = [\n    ./nixdots.nix|' /etc/nixos/configuration.nix
+else
+  echo "==> nixdots.nix already in imports, skipping."
+fi
+
+# ── rebuild ───────────────────────────────────────────────────────────────────
+echo "==> Running nixos-rebuild switch..."
+sudo nixos-rebuild switch
+
 echo ""
-echo "After reboot: log out, pick Hyprland in SDDM."
-echo "Run ./update.sh any time to re-copy dotfiles."
+echo "Done. Reboot and pick Hyprland in SDDM."
+echo "Run ./update.sh any time to re-copy dotfiles without rebuilding."
