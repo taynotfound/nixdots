@@ -12,10 +12,6 @@
     # Latest stable Hyprland release at the time of this refresh.
     hyprland.url = "github:hyprwm/Hyprland/v0.56.2";
 
-    hyprland-plugins = {
-      url = "github:hyprwm/hyprland-plugins/v0.56.0";
-      inputs.hyprland.follows = "hyprland";
-    };
   };
 
   outputs = inputs@{ nixpkgs, home-manager, hyprland, ... }:

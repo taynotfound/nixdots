@@ -1,7 +1,5 @@
 { config, pkgs, inputs, local, ... }:
 let
-  hyprbars = inputs.hyprland-plugins.packages.${pkgs.stdenv.hostPlatform.system}.hyprbars;
-
   windowctl = pkgs.writeShellApplication {
     name = "nixdots-windowctl";
     runtimeInputs = with pkgs; [ jq libnotify rofi ];
@@ -32,17 +30,10 @@ in
 {
   home.packages = [ windowctl screenshot ];
 
-  xdg.configFile."hypr/hyprlock.conf".source  = ../hypr/hyprlock.conf;
+  xdg.configFile."hypr/hyprlock.conf".source = ../hypr/hyprlock.conf;
   xdg.configFile."hypr/hypridle.conf".source  = ../hypr/hypridle.conf;
 
-  # Bypass the broken HM Hyprland module entirely — write hyprland.conf directly.
-  # The HM module (home-manager/modules/services/window-managers/hyprland.nix)
-  # tries to copy hyprland.lua from the package source; that file was removed in
-  # Hyprland >= 0.46 and the module crashes on evaluation. Plain xdg.configFile
-  # has no such dependency.
   xdg.configFile."hypr/hyprland.conf".text = ''
-    plugin = ${hyprbars}/lib/libhyprbars.so
-
     monitor = ,preferred,auto,1
 
     env = XCURSOR_THEME,Bibata-Modern-Ice
@@ -54,7 +45,6 @@ in
       gaps_out = 9
       border_size = 2
       resize_on_border = true
-      extend_border_grab_area = 12
       layout = dwindle
       col.active_border = rgba(bf8cffdd) rgba(7f5af0dd) 45deg
       col.inactive_border = rgba(6e6780aa)
@@ -78,9 +68,7 @@ in
       }
     }
 
-    animations {
-      enabled = true
-    }
+    animations { enabled = true }
 
     input {
       kb_layout = de
@@ -104,36 +92,12 @@ in
       preserve_split = true
     }
 
-    plugin {
-      hyprbars {
-        bar_height = 30
-        bar_color = rgba(191421ee)
-        col.text = rgb(eeeaf7)
-        bar_text_size = 11
-        bar_text_font = Inter
-        bar_text_align = left
-        bar_buttons_alignment = right
-        bar_padding = 10
-        bar_button_padding = 5
-        bar_part_of_window = true
-        bar_precedence_over_border = true
-        on_double_click = ${wctl} maximize
-
-        hyprbars-button = rgb(e24a5a), 16, , ${wctl} close
-        hyprbars-button = rgb(7656d6), 16, , ${wctl} maximize
-        hyprbars-button = rgb(4f4a62), 16, , ${wctl} minimize
-        hyprbars-button = rgb(353044), 16, , ${wctl} hide
-      }
-    }
-
     windowrulev2 = float, class:.*
     windowrulev2 = center, class:.*
-    windowrulev2 = plugin:hyprbars:nobar, fullscreen:1
 
     bind = SUPER, Q,       exec, kitty
     bind = SUPER, E,       exec, dolphin
     bind = SUPER, D,       exec, rofi -show drun
-    bind = SUPER, R,       exec, rofi -show drun
     bind = ALT,   F4,      exec, ${wctl} close
     bind = SUPER, C,       exec, ${wctl} close
     bind = SUPER, F,       fullscreen, 1
@@ -164,15 +128,15 @@ in
     bind = SUPER, up,    movefocus, u
     bind = SUPER, down,  movefocus, d
 
-    bind = SUPER,       1, workspace,            1
-    bind = SUPER,       2, workspace,            2
-    bind = SUPER,       3, workspace,            3
-    bind = SUPER,       4, workspace,            4
-    bind = SUPER,       5, workspace,            5
-    bind = SUPER,       6, workspace,            6
-    bind = SUPER,       7, workspace,            7
-    bind = SUPER,       8, workspace,            8
-    bind = SUPER,       9, workspace,            9
+    bind = SUPER,       1, workspace,             1
+    bind = SUPER,       2, workspace,             2
+    bind = SUPER,       3, workspace,             3
+    bind = SUPER,       4, workspace,             4
+    bind = SUPER,       5, workspace,             5
+    bind = SUPER,       6, workspace,             6
+    bind = SUPER,       7, workspace,             7
+    bind = SUPER,       8, workspace,             8
+    bind = SUPER,       9, workspace,             9
     bind = SUPER SHIFT, 1, movetoworkspacesilent, 1
     bind = SUPER SHIFT, 2, movetoworkspacesilent, 2
     bind = SUPER SHIFT, 3, movetoworkspacesilent, 3
