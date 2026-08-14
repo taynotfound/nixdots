@@ -13,18 +13,24 @@ USER_NAME="${NIXDOTS_USER:-${SUDO_USER:-$USER}}"
 HOST_NAME="${NIXDOTS_HOSTNAME:-$(hostname)}"
 TIMEZONE="${NIXDOTS_TIMEZONE:-$(timedatectl show -p Timezone --value 2>/dev/null || echo Europe/Berlin)}"
 
-echo "Installing NixDots for user=$USER_NAME host=$HOST_NAME tz=$TIMEZONE"
+HAS_NVIDIA=false
+for f in /sys/bus/pci/devices/*/vendor; do
+  [[ -r "$f" ]] && [[ "$(<"$f")" == "0x10de" ]] && HAS_NVIDIA=true
+done
+
+echo "Installing NixDots for user=$USER_NAME host=$HOST_NAME tz=$TIMEZONE nvidia=$HAS_NVIDIA"
 
 # ── system config ────────────────────────────────────────────────────────────
 sudo cp /etc/nixos/hardware-configuration.nix "$REPO/hardware-configuration.nix"
 sudo cp "$REPO/configuration.nix"             /etc/nixos/configuration.nix
 sudo cp "$REPO/hardware-configuration.nix"    /etc/nixos/hardware-configuration.nix
 
-# Stamp user/host/timezone into the live config
+# Stamp user/host/timezone/nvidia into the live config
 sudo sed -i \
   -e "s|builtins.getEnv \"NIXDOTS_USER\"|\"$USER_NAME\"|g" \
   -e "s|builtins.getEnv \"NIXDOTS_HOSTNAME\"|\"$HOST_NAME\"|g" \
   -e "s|builtins.getEnv \"NIXDOTS_TIMEZONE\"|\"$TIMEZONE\"|g" \
+  -e "s|builtins.getEnv \"NIXDOTS_NVIDIA\" == \"true\"|$HAS_NVIDIA|g" \
   /etc/nixos/configuration.nix
 
 echo "Running nixos-rebuild switch..."

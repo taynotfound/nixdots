@@ -1,8 +1,9 @@
 # Edit username/timezone here before running install.sh, or let install.sh set them.
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 let
   username = builtins.getEnv "NIXDOTS_USER";
   timeZone = builtins.getEnv "NIXDOTS_TIMEZONE";
+  hasNvidia = builtins.getEnv "NIXDOTS_NVIDIA" == "true";
 in {
   imports = [ ./hardware-configuration.nix ];
 
@@ -18,8 +19,10 @@ in {
 
   # NVIDIA — safe to leave in even without the hardware; it's a no-op then.
   nixpkgs.config.allowUnfree = true;
-  services.xserver.videoDrivers = [ "nvidia" ];
-  hardware.nvidia = {
+
+  # NVIDIA — only enabled if install.sh detected an NVIDIA GPU.
+  services.xserver.videoDrivers = lib.mkIf hasNvidia [ "nvidia" ];
+  hardware.nvidia = lib.mkIf hasNvidia {
     modesetting.enable = true;
     open = false;
     nvidiaSettings = true;
