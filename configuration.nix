@@ -72,7 +72,7 @@ in {
     kitty firefox
     kdePackages.dolphin kdePackages.ark
     # Themes
-    papirus-icon-theme bibata-hyprcursor adw-gtk3 nwg-look
+    papirus-icon-theme bibata-cursors adw-gtk3 nwg-look
     # Utils
     git wget curl jq libnotify btop fastfetch
     unzip zip nano pciutils usbutils wev
