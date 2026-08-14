@@ -53,7 +53,7 @@ in {
   # Fonts
   fonts.packages = with pkgs; [
     inter
-    (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    nerd-fonts.jetbrains-mono
     font-awesome
     noto-fonts
     noto-fonts-emoji
