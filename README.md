@@ -88,7 +88,13 @@ cd ~/.config/nixdots
 ./update.sh
 ```
 
-`update.sh` updates all flake inputs, checks the flake, and rebuilds the system. Use it deliberately: updating inputs can change Hyprland and system packages.
+To validate without changing the running system:
+
+```bash
+./check.sh
+```
+
+`check.sh` runs `nix flake check --no-build`, rejects the removed legacy Lua Hyprland config, and runs `nixos-rebuild dry-build`. `update.sh` updates all flake inputs, checks the flake, and rebuilds the system. Use it deliberately: updating inputs can change Hyprland and system packages.
 
 To rebuild without updating inputs:
 
