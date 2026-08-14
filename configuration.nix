@@ -54,9 +54,9 @@ in {
   fonts.packages = with pkgs; [
     inter
     nerd-fonts.jetbrains-mono
-    font-awesome
+    font-awesome_6
     noto-fonts
-    noto-fonts-emoji
+    noto-fonts-color-emoji
   ];
 
   # Packages installed system-wide
@@ -72,7 +72,7 @@ in {
     kitty firefox
     kdePackages.dolphin kdePackages.ark
     # Themes
-    papirus-icon-theme bibata-cursors adw-gtk3 nwg-look
+    papirus-icon-theme bibata-hyprcursor adw-gtk3 nwg-look
     # Utils
     git wget curl jq libnotify btop fastfetch
     unzip zip nano pciutils usbutils wev
@@ -85,5 +85,5 @@ in {
   };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  system.stateVersion = "25.05";
+  system.stateVersion = "26.05";
 }
