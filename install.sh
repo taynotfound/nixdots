@@ -40,61 +40,9 @@ chmod +x "$BIN/nixdots-screenshot"
 # ── write /etc/nixos/nixdots.nix ──────────────────────────────────────────────
 echo "==> Writing /etc/nixos/nixdots.nix..."
 sudo tee /etc/nixos/nixdots.nix > /dev/null <<'NIX'
-{ config, pkgs, lib, ... }: {
-  nixpkgs.config.allowUnfree = true;
-
-  programs.hyprland.enable = true;
-
-  services.displayManager.sddm = {
-    enable = true;
-    wayland.enable = true;
-  };
-
-  # NVIDIA RTX/GTX — proprietary driver + Wayland requirements
+{ ... }: {
+  # Required for NVIDIA + Wayland — without this you get a black screen.
   boot.kernelParams = [ "nvidia-drm.modeset=1" ];
-  services.xserver.videoDrivers = [ "nvidia" ];
-  hardware.graphics.enable = true;
-  hardware.nvidia = {
-    modesetting.enable = true;
-    open           = false;
-    nvidiaSettings = true;
-    package        = lib.mkDefault config.boot.kernelPackages.nvidiaPackages.stable;
-  };
-
-  services.pipewire = {
-    enable            = true;
-    alsa.enable       = true;
-    alsa.support32Bit = true;
-    pulse.enable      = true;
-  };
-  hardware.bluetooth.enable = true;
-
-  fonts.packages = with pkgs; [
-    inter
-    nerd-fonts.jetbrains-mono
-    font-awesome_6
-    noto-fonts
-    noto-fonts-color-emoji
-  ];
-
-  environment.systemPackages = with pkgs; [
-    hyprlock hypridle hyprpicker
-    waybar swaynotificationcenter wlogout
-    nwg-dock-hyprland nwg-drawer rofi
-    grim slurp wl-clipboard cliphist
-    brightnessctl playerctl pavucontrol
-    networkmanagerapplet blueman
-    kitty firefox
-    kdePackages.dolphin kdePackages.ark
-    papirus-icon-theme bibata-cursors adw-gtk3 nwg-look
-    git wget curl jq libnotify btop fastfetch
-    unzip zip nano wev
-  ];
-
-  xdg.portal = {
-    enable       = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
-  };
 }
 NIX
 
