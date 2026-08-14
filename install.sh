@@ -1,54 +1,25 @@
 #!/usr/bin/env bash
+# NixDots installer — never touches /etc/nixos automatically.
+# Copies dotfiles and prints what to add to your configuration.nix.
 set -euo pipefail
 
 REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-
-# ── preflight ────────────────────────────────────────────────────────────────
-[[ -e /etc/NIXOS ]]                         || { echo "Run this on NixOS." >&2; exit 1; }
-[[ -f /etc/nixos/hardware-configuration.nix ]] || { echo "Missing /etc/nixos/hardware-configuration.nix" >&2; exit 1; }
-[[ $EUID -ne 0 ]]                           || { echo "Run as a normal user, not root." >&2; exit 1; }
-command -v nixos-rebuild >/dev/null         || { echo "nixos-rebuild not found." >&2; exit 1; }
-
-USER_NAME="${NIXDOTS_USER:-${SUDO_USER:-$USER}}"
-HOST_NAME="${NIXDOTS_HOSTNAME:-$(hostname)}"
-TIMEZONE="${NIXDOTS_TIMEZONE:-$(timedatectl show -p Timezone --value 2>/dev/null || echo Europe/Berlin)}"
-
-HAS_NVIDIA=false
-for f in /sys/bus/pci/devices/*/vendor; do
-  [[ -r "$f" ]] && [[ "$(<"$f")" == "0x10de" ]] && HAS_NVIDIA=true
-done
-
-echo "Installing NixDots for user=$USER_NAME host=$HOST_NAME tz=$TIMEZONE nvidia=$HAS_NVIDIA"
-
-# ── system config ────────────────────────────────────────────────────────────
-sudo cp /etc/nixos/hardware-configuration.nix "$REPO/hardware-configuration.nix"
-sudo cp "$REPO/configuration.nix"             /etc/nixos/configuration.nix
-sudo cp "$REPO/hardware-configuration.nix"    /etc/nixos/hardware-configuration.nix
-
-# Stamp user/host/timezone/nvidia into the live config
-sudo sed -i \
-  -e "s|builtins.getEnv \"NIXDOTS_USER\"|\"$USER_NAME\"|g" \
-  -e "s|builtins.getEnv \"NIXDOTS_HOSTNAME\"|\"$HOST_NAME\"|g" \
-  -e "s|builtins.getEnv \"NIXDOTS_TIMEZONE\"|\"$TIMEZONE\"|g" \
-  -e "s|builtins.getEnv \"NIXDOTS_NVIDIA\" == \"true\"|$HAS_NVIDIA|g" \
-  /etc/nixos/configuration.nix
-
-echo "Running nixos-rebuild switch..."
-sudo nixos-rebuild switch
-
-# ── dotfiles ──────────────────────────────────────────────────────────────────
 CFG="$HOME/.config"
-mkdir -p "$CFG/hypr" "$CFG/waybar" "$HOME/.local/bin"
+BIN="$HOME/.local/bin"
 
-cp -f "$REPO/hypr/hyprland.conf" "$CFG/hypr/hyprland.conf"
+echo "==> Copying dotfiles..."
+mkdir -p "$CFG/hypr" "$CFG/waybar" "$BIN"
+
+cp -f "$REPO/hypr/hyprland.conf"  "$CFG/hypr/hyprland.conf"
 cp -f "$REPO/hypr/hyprlock.conf"  "$CFG/hypr/hyprlock.conf"
 cp -f "$REPO/hypr/hypridle.conf"  "$CFG/hypr/hypridle.conf"
 cp -f "$REPO/waybar/config.jsonc" "$CFG/waybar/config.jsonc"
 cp -f "$REPO/waybar/style.css"    "$CFG/waybar/style.css"
-cp -f "$REPO/scripts/nixdots-windowctl"  "$HOME/.local/bin/nixdots-windowctl"
-chmod +x "$HOME/.local/bin/nixdots-windowctl"
 
-cat > "$HOME/.local/bin/nixdots-screenshot" <<'SCRIPT'
+cp -f "$REPO/scripts/nixdots-windowctl" "$BIN/nixdots-windowctl"
+chmod +x "$BIN/nixdots-windowctl"
+
+cat > "$BIN/nixdots-screenshot" <<'SCRIPT'
 #!/usr/bin/env bash
 set -euo pipefail
 mode="${1:-region}"
@@ -62,8 +33,75 @@ case "$mode" in
 esac
 notify-send "Screenshot saved" "$file"
 SCRIPT
-chmod +x "$HOME/.local/bin/nixdots-screenshot"
+chmod +x "$BIN/nixdots-screenshot"
 
 echo ""
-echo "Done. Log out and select Hyprland in SDDM, or reboot."
-echo "Run ./update.sh to apply config changes without rebuilding."
+echo "==> Dotfiles copied."
+echo ""
+echo "=========================================================="
+echo " Add this to your /etc/nixos/configuration.nix, then run:"
+echo "   sudo nixos-rebuild switch"
+echo "=========================================================="
+cat <<'NIX'
+
+  # ── NixDots ────────────────────────────────────────────────────
+  nixpkgs.config.allowUnfree = true;
+
+  programs.hyprland.enable = true;
+
+  services.displayManager.sddm = {
+    enable     = true;
+    wayland.enable = true;
+  };
+
+  # NVIDIA (RTX/GTX 20xx+ proprietary)
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.graphics.enable = true;
+  hardware.nvidia = {
+    modesetting.enable = true;
+    open           = false;
+    nvidiaSettings = true;
+    package        = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  services.pipewire = {
+    enable          = true;
+    alsa.enable     = true;
+    alsa.support32Bit = true;
+    pulse.enable    = true;
+  };
+  hardware.bluetooth.enable = true;
+
+  fonts.packages = with pkgs; [
+    inter
+    nerd-fonts.jetbrains-mono
+    font-awesome_6
+    noto-fonts
+    noto-fonts-color-emoji
+  ];
+
+  environment.systemPackages = with pkgs; [
+    hyprlock hypridle hyprpicker
+    waybar swaynotificationcenter wlogout
+    nwg-dock-hyprland nwg-drawer rofi
+    grim slurp wl-clipboard cliphist
+    brightnessctl playerctl pavucontrol
+    networkmanagerapplet blueman
+    kitty firefox
+    kdePackages.dolphin kdePackages.ark
+    papirus-icon-theme bibata-cursors adw-gtk3 nwg-look
+    git wget curl jq libnotify btop fastfetch
+    unzip zip nano wev
+  ];
+
+  xdg.portal = {
+    enable        = true;
+    extraPortals  = [ pkgs.xdg-desktop-portal-hyprland ];
+  };
+  # ── end NixDots ────────────────────────────────────────────────
+
+NIX
+echo "=========================================================="
+echo ""
+echo "After reboot: log out, pick Hyprland in SDDM."
+echo "Run ./update.sh any time to re-copy dotfiles."
